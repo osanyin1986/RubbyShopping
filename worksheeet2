@@ -1,0 +1,273 @@
+require('dotenv').config()
+const express = require("express");
+const bodyParser = require("body-parser");
+const ejs = require("ejs");
+const postman = require("postman");
+const helmet = require("helmet");
+const redis = require("redis");
+const session = require("express-session");
+const mongoose = require('mongoose');
+const passport= require("passport");
+const passportLocalMongoose=require("passport-local-mongoose");
+const uniqueValidator = require('mongoose-unique-validator');
+const _ = require("lodash");
+// const bcrypt = require("bcrypt");
+// const saltRounds = 10;
+// const md5=require("md5");
+
+
+const homeStartingContent ="";
+const aboutContent="";
+const cartContent="";
+const registerContent="";
+const loginContent="";
+const forgotContent="";
+const updateContent=""
+
+const app = express();
+
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static("public"));
+
+
+
+
+app.use(session({
+  secret: 'secret session key',
+  resave: false,
+  saveUninitialized: false,
+  unset: 'destroy',
+  name: 'session cookie name'
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
+mongoose.connect("mongodb://localhost:27017/BRubbyDB",{ useNewUrlParser: true ,
+  useUnifiedTopology: true,
+  useCreateIndex: true });
+mongoose.set("useCreateIndex", true);
+
+
+const userSchema = new mongoose.Schema({
+    firstname:String,
+    lastname:String,
+    email:String,
+    password:String,
+    confirmpassword:String
+});
+
+             // firstname: {type:String,
+             //     require:true},
+             //   lastname:{type:String,
+             //      require:true},
+             //   email: {type:String,
+             //     require:true},
+             //   confirmpassword:{type:String,
+             //      require:true},
+             //   password: {type:String,
+             //     require:true}
+             // });
+
+   userSchema.plugin(passportLocalMongoose);
+    // userSchema.plugin(uniqueValidator);
+// userSchema.plugin(encrypt,
+//    {secret: process.env.SECRET,
+//      encryptedFields: ["password"],
+//      encryptedFields:["confirmpassword"] });
+
+
+
+const User = mongoose.model("User", userSchema);
+
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+
+
+//
+// passport.serializeUser(function(user, done) {
+//   done(null, user.id);
+// });
+// passport.deserializeUser(function(id, done) {
+//   User.findById(id, function(err, user) {
+//     done(err, user);
+//   });
+// });
+
+
+
+
+
+app.get("/" ,function (req, res) {
+  res.render("home" , {startingContent: homeStartingContent});
+
+});
+
+app.get("/about" ,function (req, res) {
+  res.render("about" , {welcome: aboutContent});
+});
+
+
+app.get("/update", function (req, res) {
+  res.render("update", {updateContent: updateContent});
+});
+
+app.get("/login" ,function (req, res) {
+  res.render("login" , {loginContent: loginContent});
+  // if (req.isAuthenticated()){
+  //   res.render("login" , {loginContent: loginContent})
+  // }else{
+  //   res.redirect("register" , {registerContent: registerContent});
+  // }
+});
+
+app.get("/register" ,function (req, res) {
+  res.render("register" , {registerContent: registerContent});
+});
+
+app.get("/cart" ,function (req, res) {
+  res.render("cart" , {cartContent: cartContent});
+});
+
+app.get("/forgot" , function (req, res) {
+  res.render("forgot", {forgotContent: forgotContent});
+});
+
+
+
+
+app.post("/register",function (req, res) {
+
+User.register({firstname: req.body.firstName,lastname:req.body.lastName,
+  username:req.body.username},
+  req.body.password ,
+   function(err, user){
+    if(err){
+      console.log(err);
+
+      res.redirect("/register")
+    }else{
+      passport.authenticate("local")(req, res, function () {
+        res.redirect("/login")
+      })
+    }
+  });
+
+});
+
+//       And we're going to check to see if there were any errors,
+// then we're going to log those errors. And for the user we're simply going to redirect them back to the
+// same register page so that they can try again.
+// Now if there were no errors though, we're going to authenticate our user using passport.
+// So we're going to write passport.authenticate and the type of authentication that we're performing
+// is local.
+    //   res.redirect("/register")
+    // }else{
+    //   passport.authenticate("local")(req, res, function () {
+    //     res.redirect("/login")
+    //   })
+//       And then once we've authenticated them, we're going to again open a set of parentheses and we're going
+// to pass in req, res and a callback. And this callback is only triggered if the authentication
+// was successful and we managed to successfully setup a cookie that saved their current logged in session
+// so will you have to check to see if they're logged in or not.
+//     }
+//   });
+//
+// });
+
+
+
+app.post("/login" , function (req, res) {
+
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password
+  });
+
+  req.login(user, function (err) {
+    if (err) {
+      console.log(err);
+    } else{
+      passport.authenticate("local")(req, res,function () {
+        res.redirect("/");
+      });
+    }
+  });
+});
+
+app.get("/logout", function (req, res) {
+  req.logout();
+  res.redirect("/");
+});
+
+// app.post("/register",function(req,res) {
+//   // bcrypt.hash(req.body.Password, saltRounds, function (err, hash) {
+//   //   const newUser = new User({
+//   //     firstname: req.body.fName,
+//   //     lastname: req.body.lName,
+//   //     email: req.body.username,
+//   //     confirmpassword: hash,
+//   //     password: hash
+//   //     // confirmpassword: md5(req.body.Password),
+//   //     // password: md5(req.body.Password)
+//   //   });
+//   //   newUser.save(function (err) {
+//   //     if(err){
+//   //       console.log(err);
+//   //     }else{
+//   //       res.render("login" , {loginContent: loginContent});
+//   //     }
+//   //   });
+//   //
+//   // });
+// });
+
+
+
+//  app.post("/login", function (req, res) {
+//   // const username = req.body.username;
+//   // const password = req.body.password;
+//   // // const password = md5(req.body.password);
+//   // User.findOne({email: username}, function (err, foundUser) {
+//   //   if(err){
+//   //     console.log(err);
+//   //   }else{
+//   //     if(foundUser){
+//   //       bcrypt.compare(password, foundUser.password, function (err, result) {
+//   //       if(result === true){
+//   //         // if(foundUser.password === password){
+//   //           res.render("home", {startingContent: homeStartingContent});
+//   //       }
+//   //     });
+//   //      }
+//   //     }
+//   // });
+// });
+// //
+// // ///// Note For Login and Req   //////////////
+// So if the foundUser.password is equal to the password created here.
+//
+// And if that is the case then that means not only do we have a user with that email,
+//
+// so the user exists and they registered before, but also the password they typed in in the form is equal
+//
+// to the one in our database which means that they are the correct user. They've successfully logged in//////////////////////////////
+
+
+
+
+
+
+
+
+
+app.listen(3000, function() {
+  console.log("Server started on port 3000");
+});

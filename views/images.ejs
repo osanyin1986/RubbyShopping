@@ -1,0 +1,7 @@
+<%- include("partials/header"); -%>
+
+<div id="image-container">
+  <% images.forEach((image) => { %>
+     <a href="#"><img src="<%= image.url %>"></a>
+  <% }) %>
+</div>

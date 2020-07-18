@@ -1,0 +1,36 @@
+<%- include("partials/header"); -%>
+
+
+<h1></h1>
+    <p> <%= updateContent %> </p>
+
+  <div class="row">
+    <% updates.forEach(function(update) { %>
+      <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+          <div class="box card">
+              <div class="box cardImg">
+                  <a href="/update/<%=update._id%>">  <img src="https://image.freepik.com/psd-gratuit/cap-maquette_1310-498.jpg, <%=update.img.data.toString('base64'); %>" alt="Cart image"></a>
+              </div>
+              <div class="info">
+                  <h3>Name</h3>
+                  <p><span>#150</span><%=update.price%></p>
+                  <a href="/update/<%=update._id%>"><i class="fa fa-cart-plus" aria-hidden="true"></i></a>
+                  <button href="/order/<%=update._id%>" class="btn btn-primary">Buy</button>
+              </div>
+          </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+          <div class="box card">
+              <div class="box cardImg">
+                <a href="/update/<%=update._id%>">  <img src="https://image.freepik.com/psd-gratuit/casquette-realiste-se-moque_1310-152.jpg, <%=update.img.data.toString('base64'); %>" alt="Cart image"></a>
+              </div>
+              <div class="info">
+                  <a href="/update/<%=update._id%>"><h3><%=update.productName%></h3</a>>
+                  <p><span>#150</span><%=cart.price%></p>
+                  <a href="/update/<%=update._id%>"><i class="fa fa-cart-plus" aria-hidden="true"></i></a>
+                  <button href="/order/<%=update._id%>" class="btn btn-primary">Buy</button>
+              </div>
+          </div>
+      </div>
+      <% }) %>
+</div>
